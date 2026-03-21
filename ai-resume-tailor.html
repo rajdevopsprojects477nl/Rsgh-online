@@ -4,11 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AI Resume Tailor | RSGH - Ready Start Go Head</title>
-  >
-  //fonts.googleapis.com">
-  //fonts.gstatic.com" crossorigin>
-  //fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.5.1/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     .ai-hero {
       background: linear-gradient(135deg, #3b82f6, #8b5cf6);
@@ -199,3 +199,251 @@
     <!-- API Key -->
     <div class="api-box">
       <label for="apiKey">🔑 Google Gemini API Key:</label
+          <input type="password" id="apiKey" placeholder="Paste your Gemini API key here..." autocomplete="off">
+          <small>⚠️ Your key is used only in your browser — never stored or sent to our servers. <a href="https://aistudio.google.com/app/apikey" target="_blank">Get a free key →</a></small>
+        </div>
+
+        <!-- Error message -->
+        <div class="error-msg" id="errorMsg"></div>
+
+        <!-- Model Toggle -->
+        <div class="model-toggle">
+          <button class="model-btn active" data-model="gemini-1.5-flash">⚡ Gemini 1.5 Flash</button>
+          <button class="model-btn" data-model="gemini-1.5-pro">🧠 Gemini 1.5 Pro</button>
+        </div>
+
+        <!-- Grid: Upload + JD -->
+        <div class="tailor-grid">
+          <!-- Resume Upload -->
+          <div class="tailor-card">
+            <h3>📄 Your Resume</h3>
+            <div class="upload-zone" id="uploadZone">
+              <span class="upload-icon">📂</span>
+              <p><strong>Click to upload</strong> or drag &amp; drop</p>
+              <p id="fileNameDisplay">No file chosen</p>
+              <small>Supported: PDF, DOCX, TXT &bull; Max 5MB</small>
+            </div>
+            <input type="file" id="resumeFileInput" accept=".pdf,.doc,.docx,.txt">
+            <p style="margin-top:1rem;font-size:0.82rem;color:#64748b;">Or paste your resume text directly:</p>
+            <textarea class="jd-input" id="resumeTextInput" placeholder="Paste your resume text here..."></textarea>
+          </div>
+          <!-- Job Description -->
+          <div class="tailor-card">
+            <h3>💼 Job Description</h3>
+            <textarea class="jd-input" id="jobDescInput" placeholder="Paste the full job description here..."></textarea>
+          </div>
+        </div>
+
+        <!-- Action Button -->
+        <div class="action-bar">
+          <button class="btn-ai" id="tailorBtn" onclick="tailorResume()">✨ Tailor My Resume with AI</button>
+        </div>
+
+        <!-- Results -->
+        <div class="result-section" id="resultSection">
+          <div class="result-card">
+            <div class="result-header">
+              <h3>✅ Your AI-Tailored Resume</h3>
+              <div class="download-btns">
+                <button class="btn-dl btn-copy" onclick="copyResult()">📋 Copy</button>
+                <button class="btn-dl btn-docx" onclick="downloadDocx()">📝 Download DOCX</button>
+                <button class="btn-dl btn-pdf" onclick="downloadPdf()">📄 Download PDF</button>
+              </div>
+            </div>
+            <div id="tailoredOutput"></div>
+          </div>
+          <!-- ATS Score -->
+          <div class="result-card">
+            <h3>📊 ATS Match Score</h3>
+            <div class="score-row" id="scoreSection"></div>
+          </div>
+          <!-- Tips -->
+          <div class="result-card">
+            <h3>💡 Optimisation Tips</h3>
+            <div class="tips-grid" id="tipsSection"></div>
+          </div>
+        </div>
+
+      </div><!-- /container -->
+    </section>
+
+    <!-- Footer -->
+    <footer style="background:#1e293b;color:#94a3b8;padding:2rem 0;text-align:center;font-size:0.88rem;">
+      <div class="container">
+        <p style="margin-bottom:0.4rem;"><strong style="color:#fff;">RSGH</strong> — Ready Start Go Head</p>
+        <p>&copy; 2025 RSGH. All rights reserved.</p>
+      </div>
+    </footer>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="spinner"></div>
+      <p>Gemini AI is tailoring your resume...</p>
+    </div>
+
+    <script>
+      let resumeText = '';
+      let selectedModel = 'gemini-1.5-flash';
+
+      // Model toggle
+      document.querySelectorAll('.model-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.model-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          selectedModel = btn.dataset.model;
+        });
+      });
+
+      // File Upload
+      const uploadZone = document.getElementById('uploadZone');
+      const fileInput = document.getElementById('resumeFileInput');
+      uploadZone.addEventListener('click', () => fileInput.click());
+      uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+      uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+      uploadZone.addEventListener('drop', e => { e.preventDefault(); uploadZone.classList.remove('drag-over'); handleFile(e.dataTransfer.files[0]); });
+      fileInput.addEventListener('change', () => handleFile(fileInput.files[0]));
+
+      function handleFile(file) {
+        if (!file) return;
+        if (file.size > 5 * 1024 * 1024) { alert('File too large. Max 5MB.'); return; }
+        document.getElementById('fileNameDisplay').textContent = file.name;
+        uploadZone.classList.add('file-ok');
+        const ext = file.name.split('.').pop().toLowerCase();
+        const reader = new FileReader();
+        if (ext === 'txt') {
+          reader.onload = e => { resumeText = e.target.result; document.getElementById('resumeTextInput').value = resumeText; };
+          reader.readAsText(file);
+        } else if (ext === 'pdf') {
+          reader.onload = async e => {
+            const typedarray = new Uint8Array(e.target.result);
+            const pdf = await pdfjsLib.getDocument(typedarray).promise;
+            let text = '';
+            for (let i = 1; i <= pdf.numPages; i++) {
+              const page = await pdf.getPage(i);
+              const content = await page.getTextContent();
+              text += content.items.map(s => s.str).join(' ') + '\n';
+            }
+            resumeText = text;
+            document.getElementById('resumeTextInput').value = resumeText;
+          };
+          reader.readAsArrayBuffer(file);
+        } else {
+          reader.onload = e => { resumeText = e.target.result; document.getElementById('resumeTextInput').value = resumeText; };
+          reader.readAsText(file);
+        }
+      }
+
+      async function tailorResume() {
+        const apiKey = document.getElementById('apiKey').value.trim();
+        const jd = document.getElementById('jobDescInput').value.trim();
+        const resume = document.getElementById('resumeTextInput').value.trim() || resumeText;
+        const errEl = document.getElementById('errorMsg');
+        errEl.classList.remove('visible'); errEl.textContent = '';
+
+        if (!apiKey) { showError('Please enter your Google Gemini API key.'); return; }
+        if (!resume) { showError('Please upload or paste your resume.'); return; }
+        if (!jd) { showError('Please paste the job description.'); return; }
+
+        document.getElementById('loadingOverlay').classList.add('visible');
+        document.getElementById('tailorBtn').disabled = true;
+
+        const prompt = `You are an expert resume writer and ATS optimisation specialist.
+
+Job Description:
+${jd}
+
+Original Resume:
+${resume}
+
+Task: Rewrite the resume to perfectly match the job description. Keep the same person's experience but:
+1. Align skills, keywords and terminology to the JD
+2. Quantify achievements where possible
+3. Ensure ATS-friendly formatting
+4. Keep it truthful — only enhance what is already there
+
+Then provide:
+---ATS_SCORE---
+ATS Match Score: [0-100]%
+Key Strengths: [comma separated list]
+Missing Keywords: [comma separated list]
+---TIPS---
+[3-5 bullet tips for further improvement]`;
+
+        try {
+          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error?.message || 'API error');
+          const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          parseAndDisplay(text);
+        } catch (err) {
+          showError('Error: ' + err.message);
+        } finally {
+          document.getElementById('loadingOverlay').classList.remove('visible');
+          document.getElementById('tailorBtn').disabled = false;
+        }
+      }
+
+      function parseAndDisplay(text) {
+        const parts = text.split('---ATS_SCORE---');
+        const resumePart = parts[0].trim();
+        document.getElementById('tailoredOutput').textContent = resumePart;
+
+        if (parts[1]) {
+          const rest = parts[1].split('---TIPS---');
+          const scoreText = rest[0];
+          const scoreMatch = scoreText.match(/(\d+)%/);
+          const score = scoreMatch ? parseInt(scoreMatch[1]) : 0;
+          document.getElementById('scoreSection').innerHTML = `
+            <div class="score-row">
+              <div class="score-label"><span>ATS Match Score</span><span>${score}%</span></div>
+              <div class="score-bg"><div class="score-fill" style="width:${score}%"></div></div>
+            </div>`;
+
+          if (rest[1]) {
+            const tips = rest[1].trim().split('\n').filter(t => t.trim());
+            document.getElementById('tipsSection').innerHTML = tips.map(t =>
+              `<div class="tip-chip">${t.replace(/^[-•*]\s*/, '')}</div>`
+            ).join('');
+          }
+        }
+        document.getElementById('resultSection').classList.add('visible');
+        document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth' });
+      }
+
+      function showError(msg) {
+        const el = document.getElementById('errorMsg');
+        el.textContent = msg;
+        el.classList.add('visible');
+      }
+
+      function copyResult() {
+        navigator.clipboard.writeText(document.getElementById('tailoredOutput').textContent);
+        alert('Copied to clipboard!');
+      }
+
+      function downloadDocx() {
+        const text = document.getElementById('tailoredOutput').textContent;
+        const blob = new Blob([text], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+        a.download = 'tailored-resume.docx'; a.click();
+      }
+
+      function downloadPdf() {
+        const text = document.getElementById('tailoredOutput').textContent;
+        const doc = new jspdf.jsPDF();
+        const lines = doc.splitTextToSize(text, 180);
+        doc.text(lines, 15, 15);
+        doc.save('tailored-resume.pdf');
+      }
+
+      // pdf.js worker
+      if (typeof pdfjsLib !== 'undefined') {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.5.1/pdf.worker.min.js';
+      }
+    </script>
+  </body>
+</html>
