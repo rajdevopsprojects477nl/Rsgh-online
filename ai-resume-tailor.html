@@ -8,268 +8,143 @@
   //fonts.googleapis.com">
   //fonts.gstatic.com" crossorigin>
   //fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-  <!-- pdf-lib for PDF generation -->
-  <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-  <!-- docx for DOCX generation -->
-  <script src="https://unpkg.com/docx@8.5.0/build/index.js"></script>
-  <!-- FileSaver for downloading -->
-  <script src="https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
-    /* ---- Page-specific styles ---- */
     .ai-hero {
-      background: linear-gradient(135deg, var(--gradient-start, #3b82f6), var(--gradient-end, #8b5cf6));
-      color: #fff;
-      padding: 3rem 0 2rem;
-      text-align: center;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      color: #fff; padding: 3.5rem 0 2.5rem; text-align: center;
     }
-    .ai-hero h1 { font-size: 2.2rem; margin-bottom: 0.5rem; }
-    .ai-hero p  { font-size: 1.05rem; opacity: 0.9; max-width: 600px; margin: 0 auto; }
+    .ai-hero h1 { font-size: 2.4rem; margin-bottom: 0.6rem; }
+    .ai-hero p  { font-size: 1.05rem; opacity: 0.92; max-width: 620px; margin: 0 auto; }
     .ai-badge {
-      display: inline-block;
-      background: rgba(255,255,255,0.2);
-      border: 1px solid rgba(255,255,255,0.4);
-      border-radius: 20px;
-      padding: 0.25rem 1rem;
-      font-size: 0.8rem;
-      font-weight: 600;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      margin-bottom: 1rem;
+      display: inline-block; background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.4); border-radius: 20px;
+      padding: 0.3rem 1.1rem; font-size: 0.8rem; font-weight: 700;
+      letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 1rem;
     }
-    .tailor-section { padding: 3rem 0; background: var(--light-color, #f8fafc); }
+    .tailor-section { padding: 3rem 0; background: #f8fafc; }
     .tailor-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 2rem;
-      margin-bottom: 2rem;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 1.75rem; margin-bottom: 1.75rem;
     }
-    @media (max-width: 768px) { .tailor-grid { grid-template-columns: 1fr; } }
+    @media(max-width:768px){ .tailor-grid{ grid-template-columns:1fr; } }
     .tailor-card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 1.75rem;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+      background: #fff; border-radius: 14px; padding: 1.75rem;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.07);
     }
     .tailor-card h3 {
-      font-size: 1.05rem;
-      font-weight: 700;
-      margin-bottom: 1rem;
-      color: var(--dark-color, #1e293b);
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
+      font-size: 1rem; font-weight: 700; margin-bottom: 1rem;
+      color: #1e293b; display: flex; align-items: center; gap: 0.5rem;
     }
     .upload-zone {
-      border: 2px dashed var(--primary-color, #2563eb);
-      border-radius: 10px;
-      padding: 2rem 1rem;
-      text-align: center;
-      cursor: pointer;
-      transition: background 0.2s;
-      background: #f0f6ff;
+      border: 2px dashed #2563eb; border-radius: 10px; padding: 2rem 1rem;
+      text-align: center; cursor: pointer; transition: background 0.2s; background: #f0f6ff;
     }
     .upload-zone:hover, .upload-zone.drag-over { background: #dbeafe; }
     .upload-zone .upload-icon { font-size: 2.5rem; display: block; margin-bottom: 0.5rem; }
-    .upload-zone p  { font-size: 0.9rem; color: #64748b; margin: 0.25rem 0; }
-    .upload-zone small { font-size: 0.78rem; color: #94a3b8; }
-    .file-selected {
-      background: #ecfdf5;
-      border-color: var(--secondary-color, #10b981);
-      color: #065f46;
-    }
-    .file-selected .upload-icon::before { content: "✅"; }
+    .upload-zone p  { font-size: 0.88rem; color: #64748b; margin: 0.2rem 0; }
+    .upload-zone small { font-size: 0.75rem; color: #94a3b8; }
+    .file-ok { background: #ecfdf5 !important; border-color: #10b981 !important; }
     #resumeFileInput { display: none; }
     textarea.jd-input {
-      width: 100%;
-      min-height: 200px;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 8px;
-      padding: 0.9rem 1rem;
-      font-family: 'Inter', sans-serif;
-      font-size: 0.9rem;
-      color: var(--text-color, #334155);
-      resize: vertical;
-      transition: border-color 0.2s;
-      outline: none;
+      width: 100%; min-height: 210px; border: 1.5px solid #e2e8f0; border-radius: 8px;
+      padding: 0.9rem 1rem; font-family: 'Inter', sans-serif; font-size: 0.88rem;
+      color: #334155; resize: vertical; outline: none; transition: border-color 0.2s;
+      box-sizing: border-box;
     }
-    textarea.jd-input:focus { border-color: var(--primary-color, #2563eb); }
-    .action-bar {
-      display: flex;
-      justify-content: center;
-      gap: 1rem;
-      margin: 1.5rem 0;
-      flex-wrap: wrap;
-    }
+    textarea.jd-input:focus { border-color: #2563eb; }
+    .action-bar { display: flex; justify-content: center; gap: 1rem; margin: 1.5rem 0; flex-wrap: wrap; }
     .btn-ai {
-      background: linear-gradient(135deg, #2563eb, #8b5cf6);
-      color: #fff;
-      border: none;
-      padding: 0.85rem 2.5rem;
-      border-radius: 8px;
-      font-size: 1rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: opacity 0.2s, transform 0.1s;
-      letter-spacing: 0.3px;
+      background: linear-gradient(135deg,#2563eb,#8b5cf6); color:#fff; border:none;
+      padding:0.9rem 2.8rem; border-radius:8px; font-size:1.05rem; font-weight:700;
+      cursor:pointer; transition:opacity .2s,transform .1s; letter-spacing:0.3px;
     }
-    .btn-ai:hover  { opacity: 0.9; transform: translateY(-1px); }
-    .btn-ai:active { transform: translateY(0); }
-    .btn-ai:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-    .result-section { display: none; }
-    .result-section.visible { display: block; }
+    .btn-ai:hover { opacity:.9; transform:translateY(-1px); }
+    .btn-ai:disabled { opacity:.45; cursor:not-allowed; transform:none; }
+    .result-section { display:none; }
+    .result-section.visible { display:block; }
     .result-card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 2rem;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
-      margin-bottom: 2rem;
+      background:#fff; border-radius:14px; padding:2rem;
+      box-shadow:0 2px 16px rgba(0,0,0,0.07); margin-bottom:1.75rem;
     }
     .result-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 1.25rem;
-      flex-wrap: wrap;
-      gap: 1rem;
+      display:flex; align-items:center; justify-content:space-between;
+      margin-bottom:1.25rem; flex-wrap:wrap; gap:1rem;
     }
-    .result-header h3 { font-size: 1.1rem; font-weight: 700; color: var(--dark-color, #1e293b); }
-    .download-btns { display: flex; gap: 0.75rem; flex-wrap: wrap; }
-    .btn-download {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      padding: 0.55rem 1.2rem;
-      border-radius: 7px;
-      font-size: 0.88rem;
-      font-weight: 600;
-      cursor: pointer;
-      border: none;
-      transition: opacity 0.2s;
+    .result-header h3 { font-size:1.1rem; font-weight:700; color:#1e293b; }
+    .download-btns { display:flex; gap:0.6rem; flex-wrap:wrap; }
+    .btn-dl {
+      display:inline-flex; align-items:center; gap:0.35rem;
+      padding:0.5rem 1.1rem; border-radius:7px; font-size:0.85rem;
+      font-weight:600; cursor:pointer; border:none; transition:opacity .2s;
     }
-    .btn-download:hover { opacity: 0.85; }
-    .btn-docx { background: #2563eb; color: #fff; }
-    .btn-pdf  { background: #dc2626; color: #fff; }
-    .btn-copy { background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; }
+    .btn-dl:hover { opacity:.82; }
+    .btn-docx { background:#2563eb; color:#fff; }
+    .btn-pdf  { background:#dc2626; color:#fff; }
+    .btn-copy { background:#f1f5f9; color:#334155; border:1px solid #e2e8f0; }
     #tailoredOutput {
-      white-space: pre-wrap;
-      font-family: 'Inter', sans-serif;
-      font-size: 0.9rem;
-      line-height: 1.7;
-      color: #1e293b;
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      padding: 1.25rem 1.5rem;
-      max-height: 520px;
-      overflow-y: auto;
+      white-space:pre-wrap; font-family:'Inter',sans-serif; font-size:0.88rem;
+      line-height:1.75; color:#1e293b; background:#f8fafc; border:1px solid #e2e8f0;
+      border-radius:8px; padding:1.25rem 1.5rem; max-height:540px; overflow-y:auto;
     }
-    .score-bar-wrap { margin: 1.5rem 0 0.5rem; }
-    .score-bar-label {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.83rem;
-      font-weight: 600;
-      color: #475569;
-      margin-bottom: 0.35rem;
-    }
-    .score-bar-bg {
-      background: #e2e8f0;
-      border-radius: 99px;
-      height: 10px;
-      overflow: hidden;
-    }
-    .score-bar-fill {
-      height: 10px;
-      border-radius: 99px;
-      background: linear-gradient(90deg, #2563eb, #10b981);
-      transition: width 1s ease;
-    }
-    .tips-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 1rem;
-      margin-top: 1.25rem;
-    }
+    .score-row { margin:1rem 0; }
+    .score-label { display:flex; justify-content:space-between; font-size:0.82rem; font-weight:600; color:#475569; margin-bottom:0.3rem; }
+    .score-bg { background:#e2e8f0; border-radius:99px; height:10px; overflow:hidden; }
+    .score-fill { height:10px; border-radius:99px; background:linear-gradient(90deg,#2563eb,#10b981); transition:width 1s ease; }
+    .tips-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:0.9rem; margin-top:1rem; }
     .tip-chip {
-      background: #f0fdf4;
-      border: 1px solid #bbf7d0;
-      border-radius: 8px;
-      padding: 0.75rem 1rem;
-      font-size: 0.85rem;
-      color: #065f46;
-      display: flex;
-      align-items: flex-start;
-      gap: 0.5rem;
+      background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px;
+      padding:0.7rem 1rem; font-size:0.83rem; color:#065f46; display:flex; gap:0.5rem;
     }
-    .tip-chip.warn {
-      background: #fefce8;
-      border-color: #fde68a;
-      color: #854d0e;
-    }
+    .tip-chip.warn { background:#fefce8; border-color:#fde68a; color:#854d0e; }
     .loading-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(15,23,42,0.55);
-      z-index: 9999;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      gap: 1rem;
+      display:none; position:fixed; inset:0; background:rgba(15,23,42,.58);
+      z-index:9999; align-items:center; justify-content:center; flex-direction:column; gap:1rem;
     }
-    .loading-overlay.visible { display: flex; }
+    .loading-overlay.visible { display:flex; }
     .spinner {
-      width: 52px; height: 52px;
-      border: 5px solid rgba(255,255,255,0.2);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
+      width:52px; height:52px; border:5px solid rgba(255,255,255,.2);
+      border-top-color:#fff; border-radius:50%; animation:spin .8s linear infinite;
     }
-    .loading-overlay p { color: #fff; font-weight: 600; font-size: 1rem; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .api-key-section {
-      background: #fffbeb;
-      border: 1.5px solid #fcd34d;
-      border-radius: 10px;
-      padding: 1.25rem 1.5rem;
-      margin-bottom: 2rem;
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      flex-wrap: wrap;
+    .loading-overlay p { color:#fff; font-weight:600; font-size:1rem; }
+    @keyframes spin { to{transform:rotate(360deg);} }
+    .api-box {
+      background:#fffbeb; border:1.5px solid #fcd34d; border-radius:10px;
+      padding:1.2rem 1.5rem; margin-bottom:1.75rem; display:flex;
+      align-items:center; gap:1rem; flex-wrap:wrap;
     }
-    .api-key-section label { font-size: 0.9rem; font-weight: 600; color: #92400e; white-space: nowrap; }
-    .api-key-section input {
-      flex: 1;
-      min-width: 220px;
-      padding: 0.55rem 1rem;
-      border: 1.5px solid #fcd34d;
-      border-radius: 7px;
-      font-size: 0.9rem;
-      outline: none;
-      background: #fff;
+    .api-box label { font-size:0.88rem; font-weight:700; color:#92400e; white-space:nowrap; }
+    .api-box input {
+      flex:1; min-width:220px; padding:0.55rem 1rem; border:1.5px solid #fcd34d;
+      border-radius:7px; font-size:0.88rem; outline:none; background:#fff;
     }
-    .api-key-section small { color: #b45309; font-size: 0.78rem; width: 100%; }
-    .how-it-works {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 1.25rem;
-      margin: 2rem 0 1rem;
-      text-align: center;
+    .api-box small { color:#b45309; font-size:0.76rem; width:100%; }
+    .how-grid {
+      display:grid; grid-template-columns:repeat(auto-fit,minmax(155px,1fr));
+      gap:1.25rem; margin:1.5rem 0; text-align:center;
     }
-    .step-box { padding: 1rem; }
-    .step-box .step-num {
-      width: 36px; height: 36px;
-      background: linear-gradient(135deg, #2563eb, #8b5cf6);
-      color: #fff;
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 700; font-size: 0.95rem;
-      margin: 0 auto 0.6rem;
+    .step { padding:1rem; }
+    .step .num {
+      width:36px; height:36px; background:linear-gradient(135deg,#2563eb,#8b5cf6);
+      color:#fff; border-radius:50%; display:flex; align-items:center;
+      justify-content:center; font-weight:700; font-size:0.95rem; margin:0 auto 0.6rem;
     }
-    .step-box p { font-size: 0.85rem; color: #475569; }
-    .section-title { text-align: center; margin-bottom: 0.5rem; }
-    .section-subtitle { text-align: center; color: #64748b; font-size: 0.95rem; margin-bottom: 2rem; }
+    .step p { font-size:0.83rem; color:#475569; margin-top:0.3rem; }
+    .sec-title { text-align:center; margin-bottom:0.4rem; }
+    .sec-sub   { text-align:center; color:#64748b; font-size:0.93rem; margin-bottom:2rem; }
+    .model-toggle {
+      display:flex; gap:0.6rem; margin-bottom:1rem; flex-wrap:wrap;
+    }
+    .model-btn {
+      padding:0.4rem 1rem; border-radius:6px; border:1.5px solid #e2e8f0;
+      font-size:0.82rem; font-weight:600; cursor:pointer; background:#f8fafc; color:#475569;
+      transition:all .2s;
+    }
+    .model-btn.active { background:#2563eb; color:#fff; border-color:#2563eb; }
+    .error-msg {
+      background:#fef2f2; border:1px solid #fecaca; border-radius:8px;
+      padding:0.9rem 1.2rem; color:#991b1b; font-size:0.88rem; margin-bottom:1rem; display:none;
+    }
+    .error-msg.visible { display:block; }
   </style>
 </head>
 <body>
@@ -278,7 +153,9 @@
 <nav class="navbar">
   <div class="container">
     <div class="nav-brand">
-      <h2 style="display:flex;align-items:center;gap:0.5rem;font-size:1.75rem;"><span style="font-size:2rem;">🚀</span> RSGH</h2>
+      <h2 style="display:flex;align-items:center;gap:0.5rem;font-size:1.75rem;">
+        <span style="font-size:2rem;">🚀</span> RSGH
+      </h2>
       <span class="brand-tagline" style="font-size:0.9rem;font-weight:500;opacity:0.85;letter-spacing:0.5px;">Your QA Career Journey</span>
     </div>
     <ul class="nav-menu">
@@ -286,7 +163,7 @@
       ><a href="blog.html">Blog</a></li>
       ><a href="resources.html">Resources</a></li>
       ><a href="services.html">Services</a></li>
-      ><a href="ai-resume-tailor.html" class="active">🤖 AI Resume</a></li>
+      ><a href="ai-resume-tailor.html" class="active" style="color:#8b5cf6;font-weight:700;">🤖 AI Resume</a></li>
       ><a href="about.html">About</a></li>
     </ul>
   </div>
@@ -295,22 +172,22 @@
 <!-- Hero -->
 <section class="ai-hero">
   <div class="container">
-    <span class="ai-badge">✨ AI Powered</span>
-    <h1>AI Resume Tailor</h1>
-    <p>Upload your resume, paste the job description — get a perfectly tailored resume in seconds. Download as PDF or DOCX.</p>
+    <div class="ai-badge">✨ Powered by Google Gemini AI</div>
+    <h1>🤖 AI Resume Tailor</h1>
+    <p>Upload your resume + paste the job description — Gemini AI rewrites your resume to perfectly match the role. Download as PDF or DOCX instantly.</p>
   </div>
 </section>
 
 <!-- How it works -->
-<section style="padding:2rem 0 0;background:#fff;">
+<section style="padding:2.5rem 0 0;background:#fff;">
   <div class="container">
-    <h2 class="section-title">How It Works</h2>
-    <p class="section-subtitle">Three simple steps to a job-winning resume</p>
-    <div class="how-it-works">
-      <div class="step-box"><div class="step-num">1</div><strong>Upload Resume</strong><p>Upload your existing resume (PDF, DOCX, or TXT)</p></div>
-      <div class="step-box"><div class="step-num">2</div><strong>Paste Job Description</strong><p>Copy the job posting you want to apply for</p></div>
-      <div class="step-box"><div class="step-num">3</div><strong>AI Tailors It</strong><p>AI rewrites your resume to match the role perfectly</p></div>
-      <div class="step-box"><div class="step-num">4</div><strong>Download</strong><p>Get your tailored resume as PDF or DOCX instantly</p></div>
+    <h2 class="sec-title">How It Works</h2>
+    <p class="sec-sub">Four steps to a job-winning, ATS-optimised resume</p>
+    <div class="how-grid">
+      <div class="step"><div class="num">1</div><strong>Upload Resume</strong><p>PDF, DOCX or plain text</p></div>
+      <div class="step"><div class="num">2</div><strong>Paste Job Description</strong><p>Copy the full job posting</p></div>
+      <div class="step"><div class="num">3</div><strong>Gemini AI Tailors It</strong><p>Keywords, skills & format matched</p></div>
+      <div class="step"><div class="num">4</div><strong>Download</strong><p>PDF or DOCX — ready to send</p></div>
     </div>
   </div>
 </section>
@@ -319,137 +196,6 @@
 <section class="tailor-section">
   <div class="container">
 
-    <!-- API Key input -->
-    <div class="api-key-section">
-      abel>🔑 OpenAI API Key:</label>
-      <input type="password" id="apiKeyInput" placeholder="sk-..." autocomplete="off">
-      <small>⚠️ Your key is used only in your browser and never stored or sent anywhere except directly to OpenAI. <a href="https://platform.openai.com/api-keys" target="_blank">Get a free API key →</a></small>
-    </div>
-
-    <div class="tailor-grid">
-      <!-- Upload Resume -->
-      <div class="tailor-card">
-        <h3>📄 Your Resume</h3>
-        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('resumeFileInput').click()">
-          <span class="upload-icon">📂</span>
-          <p><strong>Click to upload</strong> or drag & drop</p>
-          <p id="fileNameDisplay">No file chosen</p>
-          <small>Supported: PDF, DOCX, TXT • Max 5MB</small>
-        </div>
-        <input type="file" id="resumeFileInput" accept=".pdf,.doc,.docx,.txt">
-        <p style="font-size:0.8rem;color:#94a3b8;margin-top:0.75rem;">Or paste your resume text directly:</p>
-        <textarea class="jd-input" id="resumeTextInput" placeholder="Paste your resume text here..." style="min-height:140px;margin-top:0.4rem;"></textarea>
-      </div>
-
-      <!-- Job Description -->
-      <div class="tailor-card">
-        <h3>💼 Job Description</h3>
-        <textarea class="jd-input" id="jobDescInput" placeholder="Paste the full job description here...&#10;&#10;Example:&#10;We are looking for a Senior QA Engineer with experience in Playwright, CI/CD pipelines, and Agile methodologies..."></textarea>
-      </div>
-    </div>
-
-    <!-- Action Button -->
-    <div class="action-bar">
-      <button class="btn-ai" id="tailorBtn" onclick="tailorResume()">✨ Tailor My Resume with AI</button>
-    </div>
-
-    <!-- Result Section -->
-    <div class="result-section" id="resultSection">
-      <div class="result-card">
-        <div class="result-header">
-          <h3>✅ Your AI-Tailored Resume</h3>
-          <div class="download-btns">
-            <button class="btn-download btn-copy" onclick="copyOutput()">📋 Copy</button>
-            <button class="btn-download btn-docx" onclick="downloadDocx()">📝 Download DOCX</button>
-            <button class="btn-download btn-pdf"  onclick="downloadPdf()">📄 Download PDF</button>
-          </div>
-        </div>
-        <div id="tailoredOutput"></div>
-      </div>
-
-      <!-- ATS Score -->
-      <div class="result-card">
-        <h3>📊 ATS Match Score</h3>
-        <div id="atsScoreBars"></div>
-      </div>
-
-      <!-- Tips -->
-      <div class="result-card">
-        <h3>💡 Optimization Tips</h3>
-        <div id="optimizationTips" class="tips-grid"></div>
-      </div>
-    </div>
-
-  </div>
-</section>
-
-<!-- Footer -->
-<footer class="footer">
-  <div class="container">
-    <div class="footer-content">
-      <div class="footer-brand">
-        <h3>RSGH</h3>
-        <p>Ready Start Go Head</p>
-        <p>Empowering tech careers since 2025</p>
-      </div>
-      <div class="footer-links">
-        <h4>Quick Links</h4>
-        <ul>
-          ><a href="blog.html">Blog</a></li>
-          ><a href="resources.html">Resources</a></li>
-          ><a href="services.html">Services</a></li>
-          ><a href="about.html">About</a></li>
-          ><a href="ai-resume-tailor.html">AI Resume Tailor</a></li>
-        </ul>
-      </div>
-      <div class="footer-connect">
-        <h4>Connect</h4>
-        <ul>
-          ><a href="https://www.linkedin.com/in/rajasekhar-narisetti/" target="_blank">LinkedIn</a></li>
-          ><a href="https://github.com/rajasekhar477" target="_blank">GitHub</a></li>
-          ><a href="mailto:raja4usekhar@gmail.com">Email</a></li>
-        </ul>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <p>© 2025 RSGH - Ready Start Go Head. All rights reserved.</p>
-    </div>
-  </div>
-</footer>
-
-<!-- Loading Overlay -->
-<div class="loading-overlay" id="loadingOverlay">
-  <div class="spinner"></div>
-  <p>AI is tailoring your resume...</p>
-</div>
-
-<script>
-  // ---- File Upload Handling ----
-  let resumeText = '';
-
-  const uploadZone = document.getElementById('uploadZone');
-  const fileInput  = document.getElementById('resumeFileInput');
-
-  uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
-  uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
-  uploadZone.addEventListener('drop', e => {
-    e.preventDefault();
-    uploadZone.classList.remove('drag-over');
-    handleFile(e.dataTransfer.files[0]);
-  });
-
-  fileInput.addEventListener('change', () => handleFile(fileInput.files[0]));
-
-  function handleFile(file) {
-    if (!file) return;
-    const maxSize = 5 * 1024 * 1024;
-    if (file.size > maxSize) { alert('File too large. Max 5MB.'); return; }
-
-    document.getElementById('fileNameDisplay').textContent = file.name;
-    uploadZone.classList.add('file-selected');
-
-    const ext = file.name.split('.').pop().toLowerCase();
-    const reader = new FileReader();
-
-    if (ext === 'txt') {
-      reader.onload = e => { resumeText = e.target.result; document.getElementById('resumeTextInput').value = resumeText;
+    <!-- API Key -->
+    <div class="api-box">
+      abel>🔑 Google Gemini API Key:</label
