@@ -7,7 +7,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.5.1/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     .ai-hero {
@@ -282,7 +281,7 @@
     </div>
 
     <script>
-      let resumeText = '';
+      let uploadedFile = null;
       let selectedModel = 'gemini-1.5-flash';
 
       // Model toggle
@@ -300,85 +299,106 @@
       uploadZone.addEventListener('click', () => fileInput.click());
       uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
       uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
-      uploadZone.addEventListener('drop', e => { e.preventDefault(); uploadZone.classList.remove('drag-over'); handleFile(e.dataTransfer.files[0]); });
-      fileInput.addEventListener('change', () => handleFile(fileInput.files[0]));
+      uploadZone.addEventListener('drop', e => {
+        e.preventDefault();
+        uploadZone.classList.remove('drag-over');
+        if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]);
+      });
+      fileInput.addEventListener('change', () => { if (fileInput.files[0]) setFile(fileInput.files[0]); });
 
-      function handleFile(file) {
-        if (!file) return;
-        if (file.size > 5 * 1024 * 1024) { alert('File too large. Max 5MB.'); return; }
+      function setFile(file) {
+        if (file.size > 5 * 1024 * 1024) { showError('File too large. Max 5MB.'); return; }
+        uploadedFile = file;
         document.getElementById('fileNameDisplay').textContent = file.name;
         uploadZone.classList.add('file-ok');
+        // If TXT or DOCX, also preview text in the textarea
         const ext = file.name.split('.').pop().toLowerCase();
-        const reader = new FileReader();
         if (ext === 'txt') {
-          reader.onload = e => { resumeText = e.target.result; document.getElementById('resumeTextInput').value = resumeText; };
-          reader.readAsText(file);
-        } else if (ext === 'pdf') {
-          reader.onload = async e => {
-            const typedarray = new Uint8Array(e.target.result);
-            const pdf = await pdfjsLib.getDocument(typedarray).promise;
-            let text = '';
-            for (let i = 1; i <= pdf.numPages; i++) {
-              const page = await pdf.getPage(i);
-              const content = await page.getTextContent();
-              text += content.items.map(s => s.str).join(' ') + '\n';
-            }
-            resumeText = text;
-            document.getElementById('resumeTextInput').value = resumeText;
-          };
-          reader.readAsArrayBuffer(file);
-        } else {
-          reader.onload = e => { resumeText = e.target.result; document.getElementById('resumeTextInput').value = resumeText; };
+          const reader = new FileReader();
+          reader.onload = e => { document.getElementById('resumeTextInput').value = e.target.result; };
           reader.readAsText(file);
         }
+      }
+
+      // Convert file to base64
+      function fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = e => resolve(e.target.result.split(',')[1]);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      }
+
+      // Get MIME type
+      function getMimeType(file) {
+        const ext = file.name.split('.').pop().toLowerCase();
+        if (ext === 'pdf') return 'application/pdf';
+        if (ext === 'docx' || ext === 'doc') return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+        return 'text/plain';
       }
 
       async function tailorResume() {
         const apiKey = document.getElementById('apiKey').value.trim();
         const jd = document.getElementById('jobDescInput').value.trim();
-        const resume = document.getElementById('resumeTextInput').value.trim() || resumeText;
+        const pastedText = document.getElementById('resumeTextInput').value.trim();
         const errEl = document.getElementById('errorMsg');
         errEl.classList.remove('visible'); errEl.textContent = '';
 
         if (!apiKey) { showError('Please enter your Google Gemini API key.'); return; }
-        if (!resume) { showError('Please upload or paste your resume.'); return; }
+        if (!uploadedFile && !pastedText) { showError('Please upload your resume or paste the text.'); return; }
         if (!jd) { showError('Please paste the job description.'); return; }
 
         document.getElementById('loadingOverlay').classList.add('visible');
         document.getElementById('tailorBtn').disabled = true;
 
-        const prompt = `You are an expert resume writer and ATS optimisation specialist.
+        try {
+          const instruction = `You are an expert resume writer and ATS optimisation specialist.
 
 Job Description:
 ${jd}
 
-Original Resume:
-${resume}
-
-Task: Rewrite the resume to perfectly match the job description. Keep the same person's experience but:
-1. Align skills, keywords and terminology to the JD
+Task: Rewrite the attached resume to perfectly match the job description above. Keep the same person's real experience but:
+1. Align skills, keywords and terminology with the JD
 2. Quantify achievements where possible
 3. Ensure ATS-friendly formatting
-4. Keep it truthful — only enhance what is already there
+4. Keep it truthful - only enhance what is already there
 
-Then provide:
+After the resume, add these sections exactly:
 ---ATS_SCORE---
 ATS Match Score: [0-100]%
-Key Strengths: [comma separated list]
-Missing Keywords: [comma separated list]
+Key Strengths: [comma separated]
+Missing Keywords: [comma separated]
 ---TIPS---
-[3-5 bullet tips for further improvement]`;
+[3-5 bullet tips for improvement]`;
 
-        try {
+          let parts;
+          if (uploadedFile && uploadedFile.name.split('.').pop().toLowerCase() !== 'txt') {
+            // Send file as base64 inline_data (Gemini natively reads PDF/DOCX)
+            const base64 = await fileToBase64(uploadedFile);
+            const mimeType = getMimeType(uploadedFile);
+            parts = [
+              { inline_data: { mime_type: mimeType, data: base64 } },
+              { text: instruction }
+            ];
+          } else {
+            // Use pasted/TXT text
+            const resumeText = pastedText || await uploadedFile.text();
+            parts = [{ text: `Resume:\n${resumeText}\n\n${instruction}` }];
+          }
+
           const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+            body: JSON.stringify({ contents: [{ parts }] })
           });
+
           const data = await res.json();
-          if (!res.ok) throw new Error(data.error?.message || 'API error');
-          const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          if (!res.ok) throw new Error(data.error?.message || `API error ${res.status}`);
+          const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (!text) throw new Error('No response from Gemini. Please try again.');
           parseAndDisplay(text);
+
         } catch (err) {
           showError('Error: ' + err.message);
         } finally {
@@ -389,24 +409,21 @@ Missing Keywords: [comma separated list]
 
       function parseAndDisplay(text) {
         const parts = text.split('---ATS_SCORE---');
-        const resumePart = parts[0].trim();
-        document.getElementById('tailoredOutput').textContent = resumePart;
+        document.getElementById('tailoredOutput').textContent = parts[0].trim();
 
         if (parts[1]) {
           const rest = parts[1].split('---TIPS---');
-          const scoreText = rest[0];
-          const scoreMatch = scoreText.match(/(\d+)%/);
+          const scoreMatch = rest[0].match(/(\d+)%/);
           const score = scoreMatch ? parseInt(scoreMatch[1]) : 0;
           document.getElementById('scoreSection').innerHTML = `
             <div class="score-row">
               <div class="score-label"><span>ATS Match Score</span><span>${score}%</span></div>
               <div class="score-bg"><div class="score-fill" style="width:${score}%"></div></div>
             </div>`;
-
           if (rest[1]) {
             const tips = rest[1].trim().split('\n').filter(t => t.trim());
             document.getElementById('tipsSection').innerHTML = tips.map(t =>
-              `<div class="tip-chip">${t.replace(/^[-•*]\s*/, '')}</div>`
+              `<div class="tip-chip">${t.replace(/^[-*•]\s*/, '')}</div>`
             ).join('');
           }
         }
@@ -418,6 +435,7 @@ Missing Keywords: [comma separated list]
         const el = document.getElementById('errorMsg');
         el.textContent = msg;
         el.classList.add('visible');
+        el.scrollIntoView({ behavior: 'smooth' });
       }
 
       function copyResult() {
@@ -438,11 +456,6 @@ Missing Keywords: [comma separated list]
         const lines = doc.splitTextToSize(text, 180);
         doc.text(lines, 15, 15);
         doc.save('tailored-resume.pdf');
-      }
-
-      // pdf.js worker
-      if (typeof pdfjsLib !== 'undefined') {
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.5.1/pdf.worker.min.js';
       }
     </script>
   </body>
