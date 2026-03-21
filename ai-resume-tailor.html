@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <style>
     .ai-hero {
       background: linear-gradient(135deg, #3b82f6, #8b5cf6);
@@ -353,7 +353,7 @@
         document.getElementById('tailorBtn').disabled = true;
 
         try {
-          const instruction = `You are an expert resume writer and ATS optimisation specialist.
+          const instruction = `You are an expert resume writer and ATS optimisation specialist. Format the resume using proper Markdown: use # for name, ## for section headers like PROFESSIONAL SUMMARY, EXPERIENCE, SKILLS, EDUCATION, and bullet points with - for list items.
 
 Job Description:
 ${jd}
@@ -409,7 +409,7 @@ Missing Keywords: [comma separated]
 
       function parseAndDisplay(text) {
         const parts = text.split('---ATS_SCORE---');
-        document.getElementById('tailoredOutput').textContent = parts[0].trim();
+        const resumeText = parts[0].trim(); document.getElementById('tailoredOutput').innerHTML = marked.parse(resumeText); document.getElementById('tailoredOutput').dataset.rawText = resumeText;
 
         if (parts[1]) {
           const rest = parts[1].split('---TIPS---');
@@ -439,7 +439,7 @@ Missing Keywords: [comma separated]
       }
 
       function copyResult() {
-        navigator.clipboard.writeText(document.getElementById('tailoredOutput').textContent);
+        navigator.clipboard.writeText(document.getElementById('tailoredOutput').dataset.rawText || document.getElementById('tailoredOutput').innerText);
         alert('Copied to clipboard!');
       }
 
