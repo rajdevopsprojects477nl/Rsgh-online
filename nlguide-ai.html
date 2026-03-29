@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         .ai-hero {
             background: linear-gradient(135deg, #059669, #10b981);
@@ -41,6 +42,8 @@
             border-radius: 14px;
             padding: 2rem;
             box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+            display: flex;
+            flex-direction: column;
         }
         .guide-card h3 { margin-bottom: 1rem; color: #1e293b; display: flex; align-items: center; gap: 0.5rem; }
         .chat-input-area {
@@ -67,7 +70,24 @@
             cursor: pointer;
             width: 100%;
             font-size: 1.1rem;
+            transition: 0.2s;
         }
+        .btn-nl:hover { background: #059669; }
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+            padding: 0.7rem 1.2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: 0.2s;
+        }
+        .btn-secondary:hover { background: #e2e8f0; }
         .result-box {
             margin-top: 2rem;
             background: #fff;
@@ -75,8 +95,23 @@
             padding: 2rem;
             border-left: 5px solid #10b981;
             display: none;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
         }
         .result-box.visible { display: block; }
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
         .api-key-notice {
             background: #fffbeb;
             border: 1px solid #fcd34d;
@@ -88,11 +123,10 @@
     </style>
 </head>
 <body>
-    <!-- Navigation -->
     <nav class="navbar">
         <div class="container">
             <div class="nav-brand">
-                <h2 style=\"display: flex; align-items: center; gap: 0.5rem; font-size: 1.75rem;\"><span>🚀</span> RSGH</h2>
+                <h2 style="display: flex; align-items: center; gap: 0.5rem; font-size: 1.75rem;"><span>🚀</span> RSGH</h2>
             </div>
             <ul class="nav-menu">
                 <li><a href="index.html">Home</a></li>
@@ -116,38 +150,50 @@
         <div class="container">
             <div class="api-key-notice">
                 <strong>🔑 Gemini API Key Required:</strong>
-                <input type="password" id="apiKey" placeholder="Enter Gemini API key" style=\"margin-left:10px; padding:5px;\">
-                <p style=\"font-size:0.8rem; margin-top:5px; color:#92400e;\">Get your free key at <a href=\"https://aistudio.google.com/app/apikey\" target=\"_blank\">Google AI Studio</a>. Key stays in your browser.</p>
+                <input type="password" id="apiKey" placeholder="Enter Gemini API key" style="margin-left:10px; padding:5px;">
+                <p style="font-size:0.8rem; margin-top:5px; color:#92400e;">Get your free key at <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a>. Key stays in your browser.</p>
             </div>
 
             <div class="guide-grid">
                 <div class="guide-card">
                     <h3>🇳🇱 Ask Anything about NL</h3>
-                    <p style=\"color:#64748b; margin-bottom:1.5rem;\">Housing, BSN, Health Insurance, 30% Ruling, or Local Tips.</p>
-                    <textarea id="userInput" class="chat-input-area" placeholder=\"e.g. How do I apply for a BSN in Utrecht? or What are the best electric bike brands for commuting?\"></textarea>
-                    <button id="askBtn" class="btn-nl" onclick=\"askAI()\">Get Expert Guidance</button>
+                    <p style="color:#64748b; margin-bottom:1.5rem;">Housing, BSN, Health Insurance, 30% Ruling, or Local Tips.</p>
+                    <textarea id="userInput" class="chat-input-area" placeholder="e.g. How do I apply for a BSN in Utrecht? or What are the best electric bike brands for commuting?"></textarea>
+                    <button id="askBtn" class="btn-nl" onclick="askAI()">Get Expert Guidance</button>
                 </div>
-                
+
                 <div class="guide-card">
                     <h3>💡 Popular Topics</h3>
-                    <ul style=\"list-style:none; padding:0;\">
-                        <li style=\"margin-bottom:10px;\">✅ <strong>Documentation:</strong> BSN, DigiD, Residency</li>
-                        <li style=\"margin-bottom:10px;\">🏠 <strong>Housing:</strong> Renting, Mortgages, Utilities</li>
-                        <li style=\"margin-bottom:10px;\">🚲 <strong>Transport:</strong> NS, OV-chipkaart, E-bikes</li>
-                        <li style=\"margin-bottom:10px;\">💼 <strong>Work:</strong> 30% Ruling, Contracts, Payroll</li>
+                    <ul style="list-style:none; padding:0;">
+                        <li style="margin-bottom:10px;">✅ <strong>Documentation:</strong> BSN, DigiD, Residency</li>
+                        <li style="margin-bottom:10px;">🏠 <strong>Housing:</strong> Renting, Mortgages, Utilities</li>
+                        <li style="margin-bottom:10px;">🚲 <strong>Transport:</strong> NS, E-bikes, Commuting Tips</li>
+                        <li style="margin-bottom:10px;">💼 <strong>Career:</strong> 30% Ruling, QA/DevOps Jobs</li>
+                        <li style="margin-bottom:10px;">🏫 <strong>Education:</strong> Schools, Childcare, BSO</li>
                     </ul>
+                    <p style="font-size:0.85rem; color:#64748b; margin-top:1rem;"><em>Pro Tip: Ask about "Commuting with children on electric bikes" for tailored advice.</em></p>
                 </div>
             </div>
 
             <div id="resultBox" class="result-box">
-                <div id="aiResponse" style=\"line-height:1.7;\"></div>
+                <div class="result-header">
+                    <h3 style="margin:0;">Advice from NLGuide AI</h3>
+                </div>
+                <div id="aiResponse" class="markdown-body"></div>
+                <div class="action-buttons">
+                    <button class="btn-secondary" onclick="copyResult()">📋 Copy Advice</button>
+                    <button class="btn-secondary" onclick="downloadPdf()">📄 Download PDF</button>
+                    <button class="btn-secondary" onclick="downloadDocx()">📝 Download Docx</button>
+                </div>
             </div>
         </div>
     </section>
 
     <footer class="footer">
         <div class="container">
-            <p>&copy; 2025 RSGH. All rights reserved.</p>
+            <div class="footer-bottom">
+                <p>© 2025 RSGH - Ready Start Go Head. All rights reserved.</p>
+            </div>
         </div>
     </footer>
 
@@ -166,18 +212,18 @@
 
             btn.disabled = true;
             btn.innerText = 'Consulting NLGuide AI...';
-            
+
             try {
-                const response = await fetch(\`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=\${apiKey}\`, {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         contents: [{
                             parts: [{
-                                text: \`You are NLGuide AI, an expert assistant for expats living in the Netherlands. 
+                                text: `You are NLGuide AI, an expert assistant for expats living in the Netherlands. 
                                 Provide practical, friendly, and accurate advice for the following question. 
                                 Use bullet points for steps where applicable. 
-                                Question: \${prompt}\`
+                                Question: ${prompt}`
                             }]
                         }]
                     })
@@ -187,15 +233,57 @@
                 const text = data.candidates[0].content.parts[0].text;
                 
                 aiRes.innerHTML = marked.parse(text);
+                aiRes.dataset.rawText = text; 
                 resBox.classList.add('visible');
                 resBox.scrollIntoView({ behavior: 'smooth' });
             } catch (error) {
-                aiRes.innerHTML = '<p style=\"color:red;\">Error connecting to AI. Please check your API key.</p>';
+                aiRes.innerHTML = '<p style="color:red;">Error connecting to AI. Please check your API key.</p>';
                 resBox.classList.add('visible');
             } finally {
                 btn.disabled = false;
                 btn.innerText = 'Get Expert Guidance';
             }
+        }
+
+        function copyResult() {
+            const text = document.getElementById('aiResponse').dataset.rawText || document.getElementById('aiResponse').innerText;
+            navigator.clipboard.writeText(text);
+            alert('Advice copied to clipboard!');
+        }
+
+        function downloadDocx() {
+            const text = document.getElementById('aiResponse').dataset.rawText || document.getElementById('aiResponse').innerText;
+            const blob = new Blob([text], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'nlguide-advice.docx';
+            a.click();
+        }
+
+        function downloadPdf() {
+            const { jsPDF } = window.jspdf;
+            const text = document.getElementById('aiResponse').dataset.rawText || document.getElementById('aiResponse').innerText;
+            const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+            
+            const pageH = doc.internal.pageSize.getHeight();
+            const margin = 15;
+            const lineH = 7;
+            doc.setFont('helvetica');
+            doc.setFontSize(11);
+            
+            const lines = doc.splitTextToSize(text, 180);
+            let y = margin;
+            
+            lines.forEach(l => {
+                if (y + lineH > pageH - margin) {
+                    doc.addPage();
+                    y = margin;
+                }
+                doc.text(l, margin, y);
+                y += lineH;
+            });
+            
+            doc.save('nlguide-advice.pdf');
         }
     </script>
 </body>
