@@ -45,7 +45,13 @@
             display: flex;
             flex-direction: column;
         }
-        .guide-card h3 { margin-bottom: 1rem; color: #1e293b; display: flex; align-items: center; gap: 0.5rem; }
+        .guide-card h3 {
+            margin-bottom: 1rem;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
         .chat-input-area {
             width: 100%;
             min-height: 120px;
@@ -123,10 +129,12 @@
     </style>
 </head>
 <body>
+    <!-- Navigation -->
     <nav class="navbar">
         <div class="container">
             <div class="nav-brand">
-                <h2 style="display: flex; align-items: center; gap: 0.5rem; font-size: 1.75rem;"><span>🚀</span> RSGH</h2>
+                <h2>RSGH</h2>
+                <span class="brand-tagline">Ready Start Go Head</span>
             </div>
             <ul class="nav-menu">
                 <li><a href="index.html">Home</a></li>
@@ -149,41 +157,44 @@
     <section class="guide-section">
         <div class="container">
             <div class="api-key-notice">
-                <strong>🔑 Gemini API Key Required:</strong>
-                <input type="password" id="apiKey" placeholder="Enter Gemini API key" style="margin-left:10px; padding:5px;">
-                <p style="font-size:0.8rem; margin-top:5px; color:#92400e;">Get your free key at <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a>. Key stays in your browser.</p>
+                <strong>🔑 Gemini API Key Required:</strong> 
+                <input type="password" id="apiKey" placeholder="Enter Gemini API key" style="margin-left:10px; padding:5px; border: 1px solid #ddd; border-radius: 4px; width: 250px;">
+                <p style="margin-top: 5px; font-size: 0.85rem;">Get your free key at <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: #10b981; font-weight: 600;">Google AI Studio</a>. Key stays in your browser.</p>
             </div>
 
             <div class="guide-grid">
+                <!-- Question Card -->
                 <div class="guide-card">
                     <h3>🇳🇱 Ask Anything about NL</h3>
-                    <p style="color:#64748b; margin-bottom:1.5rem;">Housing, BSN, Health Insurance, 30% Ruling, or Local Tips.</p>
+                    <p style="color: #64748b; margin-bottom: 1.5rem;">Housing, BSN, Health Insurance, 30% Ruling, or Local Tips.</p>
                     <textarea id="userInput" class="chat-input-area" placeholder="e.g. How do I apply for a BSN in Utrecht? or What are the best electric bike brands for commuting?"></textarea>
-                    <button id="askBtn" class="btn-nl" onclick="askAI()">Get Expert Guidance</button>
+                    <button id="askBtn" onclick="askAI()" class="btn-nl">Get Expert Guidance</button>
                 </div>
 
+                <!-- Info Card -->
                 <div class="guide-card">
                     <h3>💡 Popular Topics</h3>
-                    <ul style="list-style:none; padding:0;">
-                        <li style="margin-bottom:10px;">✅ <strong>Documentation:</strong> BSN, DigiD, Residency</li>
-                        <li style="margin-bottom:10px;">🏠 <strong>Housing:</strong> Renting, Mortgages, Utilities</li>
-                        <li style="margin-bottom:10px;">🚲 <strong>Transport:</strong> NS, E-bikes, Commuting Tips</li>
-                        <li style="margin-bottom:10px;">💼 <strong>Career:</strong> 30% Ruling, QA/DevOps Jobs</li>
-                        <li style="margin-bottom:10px;">🏫 <strong>Education:</strong> Schools, Childcare, BSO</li>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="margin-bottom: 0.8rem;">✅ <strong>Documentation:</strong> BSN, DigiD, Residency</li>
+                        <li style="margin-bottom: 0.8rem;">🏠 <strong>Housing:</strong> Renting, Mortgages, Utilities</li>
+                        <li style="margin-bottom: 0.8rem;">🚲 <strong>Transport:</strong> NS, E-bikes, Commuting Tips</li>
+                        <li style="margin-bottom: 0.8rem;">💼 <strong>Career:</strong> 30% Ruling, QA/DevOps Jobs</li>
+                        <li style="margin-bottom: 0.8rem;">🏫 <strong>Education:</strong> Schools, Childcare, BSO</li>
                     </ul>
-                    <p style="font-size:0.85rem; color:#64748b; margin-top:1rem;"><em>Pro Tip: Ask about "Commuting with children on electric bikes" for tailored advice.</em></p>
+                    <p style="margin-top: 1rem; font-style: italic; font-size: 0.9rem; color: #64748b;">Pro Tip: Ask about "Commuting with children on electric bikes" for tailored advice.</p>
                 </div>
             </div>
 
+            <!-- Result Box -->
             <div id="resultBox" class="result-box">
                 <div class="result-header">
-                    <h3 style="margin:0;">Advice from NLGuide AI</h3>
+                    <h3 style="margin: 0;">Advice from NLGuide AI</h3>
                 </div>
-                <div id="aiResponse" class="markdown-body"></div>
+                <div id="aiResponse" style="line-height: 1.6; color: #334155;"></div>
                 <div class="action-buttons">
-                    <button class="btn-secondary" onclick="copyResult()">📋 Copy Advice</button>
-                    <button class="btn-secondary" onclick="downloadPdf()">📄 Download PDF</button>
-                    <button class="btn-secondary" onclick="downloadDocx()">📝 Download Docx</button>
+                    <button onclick="copyResult()" class="btn-secondary">📋 Copy Advice</button>
+                    <button onclick="downloadPdf()" class="btn-secondary">📄 Download PDF</button>
+                    <button onclick="downloadDocx()" class="btn-secondary">📝 Download Docx</button>
                 </div>
             </div>
         </div>
@@ -191,9 +202,7 @@
 
     <footer class="footer">
         <div class="container">
-            <div class="footer-bottom">
-                <p>© 2025 RSGH - Ready Start Go Head. All rights reserved.</p>
-            </div>
+            <p>© 2025 RSGH - Ready Start Go Head. All rights reserved.</p>
         </div>
     </footer>
 
@@ -218,26 +227,23 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        contents: [{
-                            parts: [{
-                                text: `You are NLGuide AI, an expert assistant for expats living in the Netherlands. 
-                                Provide practical, friendly, and accurate advice for the following question. 
-                                Use bullet points for steps where applicable. 
-                                Question: ${prompt}`
-                            }]
-                        }]
+                        contents: [{ parts: [{ text: `You are NLGuide AI, an expert assistant for expats living in the Netherlands. Provide practical, friendly, and accurate advice for the following question. Use bullet points for steps where applicable. Question: ${prompt}` }] }]
                     })
                 });
 
                 const data = await response.json();
-                const text = data.candidates[0].content.parts[0].text;
                 
+                if (data.error) {
+                    throw new Error(data.error.message);
+                }
+
+                const text = data.candidates[0].content.parts[0].text;
                 aiRes.innerHTML = marked.parse(text);
-                aiRes.dataset.rawText = text; 
+                aiRes.dataset.rawText = text;
                 resBox.classList.add('visible');
                 resBox.scrollIntoView({ behavior: 'smooth' });
             } catch (error) {
-                aiRes.innerHTML = '<p style="color:red;">Error connecting to AI. Please check your API key.</p>';
+                aiRes.innerHTML = `<p style="color:red;">Error: ${error.message}. Please check your API key and try again.</p>`;
                 resBox.classList.add('visible');
             } finally {
                 btn.disabled = false;
@@ -268,6 +274,7 @@
             const pageH = doc.internal.pageSize.getHeight();
             const margin = 15;
             const lineH = 7;
+            
             doc.setFont('helvetica');
             doc.setFontSize(11);
             
